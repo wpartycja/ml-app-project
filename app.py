@@ -1,44 +1,56 @@
 # Import packages
+import base64
 from dash import Dash, html, dash_table, dcc, callback, Output, Input
 import pandas as pd
 import plotly.express as px
+import pickle
+import matplotlib.pyplot as plt
+from gensim.models import KeyedVectors
+from gensim.models import Word2Vec
+from PIL import Image
+
 
 # Incorporate data
 df = pd.read_csv('./data/movies_metadata.csv')
+dff = pd.read_csv('./data/full_data_2_index.csv')
+genres = dff['genres']
+
+image_path = './data/plot.png'
+pil_img = Image.open("./data/plot.png")
+
+with open('./data/embed_tsne.pkl', 'rb') as f:
+    x = pickle.load(f)
+
+def b64_image(image_filename):
+    with open(image_filename, 'rb') as f:
+        image = f.read()
+    return 'data:image/png;base64,' + base64.b64encode(image).decode('utf-8')
 
 # Initialize the app
 app = Dash(__name__)
 
 # App layout
 app.layout = html.Div([
-    html.H4('Interactive scatter plot with Iris dataset'),
-    dcc.Graph(id="scatter-plot"),
-    html.P("Filter by petal width:"),
-    dcc.RangeSlider(
-        id='range-slider',
-        min=0, max=2.5, step=0.1,
-        marks={0: '0', 2.5: '2.5'},
-        value=[0.5, 2]
-    ),
+    dcc.Dropdown(['popularity', 'genres', 'vote_average'], 'popularity', id='demo-dropdown'),
+    html.Div(id='dd-output-container'),
+
+# usign get_asset_url function
+    html.Img(src=pil_img, width="600", height="700"),                
     html.Div(children='The movies dataset'),
     html.Hr(),
     dcc.RadioItems(options=['popularity', 'vote_count', 'vote_average'], value='popularity', id='controls-and-radio-item'),
+    dcc.Graph(figure={}, id='controls-and-graph'),
     dash_table.DataTable(data=df.to_dict('records'), page_size=6),
-    dcc.Graph(figure={}, id='controls-and-graph')
 ])
 
 @app.callback(
-    Output("scatter-plot", "figure"), 
-    Input("range-slider", "value"))
-def update_bar_chart(slider_range):
-    df = px.data.iris() # replace with your own data source
-    low, high = slider_range
-    mask = (df['petal_width'] > low) & (df['petal_width'] < high)
-    fig = px.scatter(
-        df[mask], x="sepal_width", y="sepal_length", 
-        color="species", size='petal_length', 
-        hover_data=['petal_width'])
-    return fig
+    Output('dd-output-container', 'children'),
+    Input('demo-dropdown', 'value')
+)
+def update_output(value):
+    return f'You have selected {value}'
+
+
 # Add controls to build the interaction
 @callback(
     Output(component_id='controls-and-graph', component_property='figure'),
