@@ -6,10 +6,10 @@ from helper_functions import search_dataframe, get_movie_information, get_dash_r
 app = Dash(__name__)
 
 app.layout = html.Div([
-    html.H1(children='Save your movie date night'),
+    html.H1(children='Save your movie date night!'),
     html.
     P(children=
-      "Have you ever been in the situation that you and your significant other have no idea on what to whatch? We come to your rescue!"
+      "Have you ever been in the situation that you and your significant other have no idea on what to watch? We come to your rescue!"
       ),
     html.
     P(children=
