@@ -12,14 +12,17 @@ genres = [
     'Music', 'Horror', 'Documentary', 'Mystery', 'Western', 'TV Movie', 'War',
     'Foreign'
 ]
-
-
 # loading cosine similarity of TF-IDF representation
 with open("data/cosine_sim.pkl", "rb") as file:
     cosine_sim = pickle.load(file)
 
 
-def show_popularity_graph(genre):
+
+def show_popularity_graph(genre: str) -> go.Figure:
+    """
+    Filter our database for a certain genre and return a figure of the
+    top 10 most popular movies
+    """
 
     # Filter the DataFrame by genre
     genre_filter = df["genres_isolated"].fillna('').str.contains(genre)

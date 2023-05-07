@@ -97,6 +97,9 @@ app.layout = html.Div([
 @app.callback(Output("output_graph", "figure"),
               Input("genre_dropdown", "value"))
 def update_graph(genre: str) -> Figure:
+    """
+    Return a figure showcasing the top 10 most popular movies for a genre
+    """
     if not genre:
         return {}
 
