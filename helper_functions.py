@@ -1,31 +1,45 @@
 import pandas as pd
 from fuzzywuzzy import process, fuzz
 import pickle
+from numpy import ndarray
 
-df = pd.read_csv("data/full_data_3.csv")
+# loading data
+df = pd.read_csv("data/full_data_3.csv", low_memory=False)
+
+# loading cosine similarity of TF-IDF representation
 with open("data/cosine_sim.pkl", "rb") as file:
-    cosine_sim = pickle.load(file)
+  cosine_sim = pickle.load(file)
 
 
-def search_dataframe(title_string):
+def search_dataframe(title_string: str) -> str:
+    """
+    Helper function to perform a fuzzy search based on user input and check
+    if a movie is contained in our data base.
+    """
 
     if title_string is None:
-        return "Please wait for search results to appear!"
-    else:
+        return "Please wait for search results to appear (~30 sec) :)"
 
+    else:
+        # fuzzy search possible data entries
         similar_titles = process.extract(title_string,
                                          df["original_title"],
                                          scorer=fuzz.token_sort_ratio)
-        max_length = min(5, len(similar_titles))
         title_string = "Here are your results: "
 
+        # return all suggested entries up to 5 or less
+        max_length = min(5, len(similar_titles))
         for title in similar_titles[:max_length]:
             title_string += f"  --  {title[0]}  --  "
         return title_string
 
 
 
-def get_movie_information(movie_title):
+def get_movie_information(movie_title: str) -> str:
+    """
+    Helper function to fetch information on a movie in our data base
+    """
+
     if df['original_title'].eq(movie_title).any():
         tmp = df.loc[df["original_title"] == movie_title]
         try:
@@ -52,7 +66,8 @@ def get_movie_information(movie_title):
     return title, genre, budget, runtime, popularity
 
 
-def get_recommendations(title, n_recommendations, cosine_sim=cosine_sim):
+def get_recommendations(title: str, n_recommendations: int,
+                        cosine_sim: ndarray = cosine_sim) -> list:
 
     # Get the index of the movie that matches the title
     idx = df.loc[df['title'] == title].index.values[0]
@@ -66,14 +81,11 @@ def get_recommendations(title, n_recommendations, cosine_sim=cosine_sim):
     # Get the scores of the 10 most similar movies
     sim_scores = sim_scores[1:n_recommendations + 1]
 
-    # Get the movie indices
-    movie_indices = [i[0] for i in sim_scores]
-
     # Return the top 10 most similar movies
     return sim_scores
 
 
-def get_dash_recommendations(title):
+def get_dash_recommendations(title: str) -> str:
     if title not in df['title'].tolist():
         recom_1 = "Please try another movie"
         recom_2 = "Please try another movie"
@@ -85,8 +97,9 @@ def get_dash_recommendations(title):
         recomm = get_recommendations(title, 5)
         recomm_lst = []
         for idx, sim in recomm:
-            recomm_lst.append(
-                (df.loc[df.index == idx]['title'].tolist()[0], sim))
+            movie_name = df.loc[df.index == idx]['title'].tolist()[0]
+            sim = str(round(sim, 2))
+            recomm_lst.append(f'{movie_name} ---- with a certainty of: {sim}%')
 
         recom_1 = recomm_lst[0]
         recom_2 = recomm_lst[1]
