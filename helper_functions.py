@@ -2,13 +2,46 @@ import pandas as pd
 from fuzzywuzzy import process, fuzz
 import pickle
 from numpy import ndarray
+import plotly.graph_objs as go
 
 # loading data
 df = pd.read_csv("data/full_data_3.csv", low_memory=False)
+genres = [
+    'Animation', 'Adventure', 'Romance', 'Comedy', 'Action', 'Family',
+    'History', 'Drama', 'Crime', 'Fantasy', 'Science Fiction', 'Thriller',
+    'Music', 'Horror', 'Documentary', 'Mystery', 'Western', 'TV Movie', 'War',
+    'Foreign'
+]
+
 
 # loading cosine similarity of TF-IDF representation
 with open("data/cosine_sim.pkl", "rb") as file:
-  cosine_sim = pickle.load(file)
+    cosine_sim = pickle.load(file)
+
+
+def show_popularity_graph(genre):
+
+    # Filter the DataFrame by genre
+    genre_filter = df["genres_isolated"].fillna('').str.contains(genre)
+    genre_df = df[genre_filter]
+
+    # Sort the DataFrame by popularity (descending) and select the top 10 movies
+    top_10 = genre_df.sort_values("popularity", ascending=False).head(10)
+
+    # Create a Plotly bar chart
+    fig = go.Figure(data=[
+        go.Bar(x=top_10["title"],
+               y=top_10["popularity"],
+               text=top_10["popularity"],
+               textposition="auto",
+               marker=dict(color="rgb(65, 105, 225)"))
+    ],
+                    layout=go.Layout(
+                        title=f"Top 10 Most Popular {genre} Movies",
+                        xaxis_title="Movie Title",
+                        yaxis_title="Popularity Score"))
+
+    return fig
 
 
 def search_dataframe(title_string: str) -> str:

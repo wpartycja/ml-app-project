@@ -1,7 +1,8 @@
 from dash import Dash, html, dcc, callback, Output, Input
+from plotly.graph_objs import Figure
 
 
-from helper_functions import search_dataframe, get_movie_information, get_dash_recommendations
+from helper_functions import search_dataframe, get_movie_information, get_dash_recommendations, show_popularity_graph, genres
 
 app = Dash(__name__)
 
@@ -69,14 +70,37 @@ app.layout = html.Div([
     html.Hr(),
     html.Br(),
     html.Br(),
-    html.H3(
-        children='Some additional information from a LDA Analysis'),
-    html.Img(src=app.get_asset_url('all_genres.png'),
+    html.
+    H3(children=
+       "Still bored? Lets check the most popular movies from different categories!"
+       ),
+    dcc.Dropdown(id="genre_dropdown",
+                 options=[{
+                     "label": g,
+                     "value": g
+                 } for g in genres],
+                 placeholder="Click to input a genre",
+                 value=None),
+    dcc.Graph(id="output_graph"),
+    html.Hr(),
+    html.Br(),
+    html.Br(),
+    html.H3(children="Some additional information from a LDA Analysis"),
+    html.Img(src=app.get_asset_url("all_genres.png"),
              width="1331",
              height="800")
     # plot histogram
     # dcc.Graph(figure=px.histogram(df, x='adult', y='budget', histfunc='avg'))
 ])
+
+
+@app.callback(Output("output_graph", "figure"),
+              Input("genre_dropdown", "value"))
+def update_graph(genre: str) -> Figure:
+    if not genre:
+        return {}
+
+    return show_popularity_graph(genre)
 
 
 @app.callback(
